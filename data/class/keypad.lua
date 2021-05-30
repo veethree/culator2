@@ -3,35 +3,40 @@ local lg = love.graphics
 local keypad = {}
 local keypad_meta = {__index = keypad}
 
-local default_theme = {
-    background = {0, 0, 0, 1},
-    foreground = {0.3, 0.3, 0.3, 1},
-    accent = {1, 0.2, 0.2, 1},
-    defaultFont = lg.newFont(math.floor(lg.getWidth() * 0.11)),
-    tinyFont = lg.newFont(math.floor(lg.getWidth() * 0.05))
-}
 
 -- Renders text in the center of the rect
-local function renderLabel(text, x, y, width, height)
+local function renderLabel(text, x, y, width, height, r)
+    r = r or 0
     local font = lg.getFont()
     local labelWidth = font:getWidth(text)
     local labelHeight = font:getAscent() - font:getDescent()
     local x = x + (width / 2) - (labelWidth / 2)
     local y = y + (height / 2) - (labelHeight / 2)
-    lg.print(text, x, y)
+    lg.print(text, x, y, r)
 end
 
-function keypad.new(layout, x, y, width, height, inputFunction, theme)
-    theme = theme or default_theme
+function keypad.new(layout, x, y, width, height, inputFunction, _theme)
+    local default_theme = {
+        background = theme.bg,
+        foreground = theme.fg,
+        line = theme.line,
+        accent = theme.accent,
+        defaultFont = theme.font.regular, 
+        tinyFont = theme.font.tiny 
+    }
+    _theme = _theme or default_theme
     local k = {
        x = x,
        y = y,
        yOffset = 0,
+       alpha = 0,
+       targetAlpha = 1,
        width = width,
        height = height,
        inputFunction = inputFunction, 
        keyFunctions = {},
-       theme = theme
+       specialKeys = {},
+       theme = _theme
     }
     k.layout = {}
     for i,v in ipairs(layout) do
@@ -40,7 +45,8 @@ function keypad.new(layout, x, y, width, height, inputFunction, theme)
             settings = {
                 height = 1, 
                 font = k.theme.defaultFont,
-                color = k.theme.foreground
+                color = k.theme.foreground,
+                special = false
             }
         }
     end
@@ -48,12 +54,27 @@ function keypad.new(layout, x, y, width, height, inputFunction, theme)
     return setmetatable(k, keypad_meta)
 end
 
+function keypad:setSpecial(key)
+    self.specialKeys[key] = key
+end
+
+function keypad:updateTheme()
+    self.theme = {
+        background = theme.bg,
+        foreground = theme.fg,
+        line = theme.line,
+        accent = theme.accent,
+        defaultFont = theme.font.regular, 
+        tinyFont = theme.font.tiny 
+    }
+end
+
 function keypad:addKeyFunction(key, func)
    self.keyFunctions[key] = func
 end
 
 function keypad:update(dt)
-
+    self.alpha = self.alpha + (self.targetAlpha - self.alpha) * 10 * dt
 end
 
 -- Calculates the bounding box for a key
@@ -114,10 +135,29 @@ function keypad:draw()
             local y = settings.bounds[key].y - self.yOffset
             local keyWidth = settings.bounds[key].width
             local keyHeight = settings.bounds[key].height
+            lg.setColor(theme.kbg)
+            if self.specialKeys[key] then
+                lg.setColor(theme.special)
+            end
+            setAlpha(self.alpha)
+            lg.rectangle("fill", x, y, keyWidth, keyHeight, theme.corner, theme.corner)
+
+            lg.setColor(theme.line)
+            setAlpha(self.alpha)
+            lg.rectangle("line", x, y, keyWidth, keyHeight, theme.corner, theme.corner)
+
             lg.setColor(self.theme.foreground)
-            lg.rectangle("line", x, y, keyWidth, keyHeight)
-            lg.setColor(self.theme.accent)
-            renderLabel(key, x, y, keyWidth, keyHeight)            
+            if self.specialKeys[key] then
+                lg.setColor(theme.special_alt)
+            end
+            setAlpha(self.alpha)
+            local k = key
+            local r = 0
+            if weed.running then
+                --k = "420"
+                lg.setColor(love.math.noise(time), love.math.noise(time + 10), love.math.noise(time + 20))
+            end
+            renderLabel(k, x, y + ((keyHeight * 0.5) * (1 - self.alpha)), keyWidth, keyHeight)            
 
             settings.rowY = rowY
             rowHeight = keyHeight
@@ -136,15 +176,49 @@ function keypad:input(inputX, inputY)
         for x,key in ipairs(self.layout[y].keys) do
             local keyX, keyY, keyWidth, keyHeight = self:getKeyBounds(x, y, settings.height)
             if pointInRect(inputX, inputY, keyX, keyY, keyWidth, keyHeight) then
+                love.system.vibrate(0.01)
                 if type(self.inputFunction) == "function" then
                     self.inputFunction(self.layout[y].keys[x])
                 end
                 if self.keyFunctions[self.layout[y].keys[x]] then
-                    self.keyFunctions[self.layout[y].keys[x]]() 
+                    self.keyFunctions[self.layout[y].keys[x]](self.layout[y].keys[x])
                 end
                 break
             end
         end
+    end
+
+    --Easter egg triggers
+    --420
+    if display:read() == "420" then
+        weed:start()
+    else
+        weed:stop()
+    end
+
+    --81
+    local quotes = {
+        "SUPPORT YOUR LOCAL 81",
+        "SYL81",
+        "BIG RED MACHINE",
+        "HAMC",
+        "RED & WHITE",
+        "HELLS ANGELS",
+        "SUPPORT 81"
+    }
+    local last_theme = config.theme
+    if display:read() == "81" then
+        display:setTip(quotes[math.random(#quotes)])
+    end
+
+    --80085
+    if display:read() == "80085" then
+        display:setTip("(  *  Y  *  )")
+    end
+
+    --69
+    if display:read() == "69" then
+        display:setTip("lol")
     end
 end
 

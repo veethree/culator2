@@ -15,6 +15,11 @@ function requireFolder(path, tab)
 	end
 end	
 
+function setAlpha(a)
+    local r, g, b, _a = lg.getColor()
+    lg.setColor(r, g, b, a)
+end
+
 function pointInRect(x, y, _x, _y, width, height)
 	if x > _x and x < _x + width and y > _y and y < _y + height then
 		return true
@@ -61,44 +66,46 @@ function setColor(r, g, b, a)
 end
 
 --Converts a color from the 0-255 range to 0-1
-function convertColor(r, g, b, a)
+function convertColor(_r, g, b, a)
+	local r = _r
+	if type(_r) == "table" then
+		r = _r[1]
+		g = _r[2]
+		b = _r[3]
+		a = _r[4] or 1
+	else
+		r = _r
+	end
 	a = a or 1
 	return {r / 255, g / 255, b / 255, a / 255}
 end
 
-function tableToString(tab, recursion)
-	recursion = recursion or false
-	local t = "return {"
-	local comma = false
-	local length = tableLength(tab)
-	local i = 0
-	if recursion then t = "{" end
-
-	for k, v in pairs(tab) do
-		i = i + 1
-		local val = tostring(v)
-		if type(v) == "string" then
-			val = '"'..v..'"'
-		elseif type(v) == "table" then
-			val = tableToString(v, true)
-		end
-
-		if type(v) == "number" or type(v) == "string" then
-			t = t..val
-			if i < length then
-				t = t..", "
-			end
-		else
-			t = t..k.." = "..val
-			if i < length then
-				t = t..", "
-			end
-		end
-	end
-
-	t = t.."}"
-
-	return t
+function tableToFile(tab, recursion)
+    local str = "return {\n"
+    if recursion then
+        str = "{"
+    end
+    local i = 0
+    for key, value in pairs(tab) do
+        i = i + 1
+        if type(value) == "string" then
+            str = str..key..' = "'..value..'"'
+        elseif type(value) == "table" then
+            str = str..key.." = "..tableToFile(value, true)
+        else
+            str = str..key.." = "..tostring(value)
+        end
+        
+        if i < tableLength(tab) then
+            str = str..",\n"
+        end
+    end
+    if recursion then
+        str = str.."}"
+    else
+        str = str.."\n}"
+    end
+    return str
 end
 
 function verticalGradient(width, height, ...)

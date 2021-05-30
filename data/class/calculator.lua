@@ -18,7 +18,7 @@ function calculator:input(t)
                 self.formula = self.formula:sub(1, offset - 1)
             end
         elseif t == "c" then
-            self.formula = ""
+            self:clear()
         else
             -- If t is a symbol
             if not tonumber(t) then
@@ -42,13 +42,34 @@ function calculator:runFormula()
     if #self.formula > 0 then
         local func, err = loadstring("return tostring("..self.formula..")")
         if func then
+            local form = self.formula
             self.formula = func()
+            form = form .." = "..self.formula
+            if history[#history] ~= form then
+                history[#history + 1] = form
+            end
+            saveHistory()
         else
             self.formula = err
         end
     end
-    self.resault = true
+    --self.resault = true
     display:print(self.formula)
+end
+
+function calculator:clear()
+    self.formula = ""
+end
+
+function calculator:setFormula(form)
+    self.formula = tostring(form)
+    display:print(self.formula)
+end
+
+function calculator:hasFormula()
+    if #self.formula > 0 then
+        return true
+    else return false end
 end
 
 return calculator

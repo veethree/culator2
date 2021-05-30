@@ -1,7 +1,5 @@
 utf8 = require("utf8")
 local display = {
-    font = lg.newFont(math.floor(lg.getWidth() * 0.08)),
-    tipFont = lg.newFont(math.floor(lg.getWidth() * 0.03)),
     margin = 12,
     text = "",
     tip = ""
@@ -30,18 +28,25 @@ function display:clear()
 end
 
 function display:draw(x, y, width, height)
-    lg.setFont(self.font)
-    local fontHeight = self.font:getAscent() - self.font:getDescent()
-    local textWidth, lines = self.font:getWrap(self.text, width - (self.margin))
+    lg.setFont(theme.font.regular)
+    local fontHeight = lg.getFont():getAscent() - lg.getFont():getDescent()
+    local textWidth, lines = lg.getFont():getWrap(self.text, width - (self.margin))
     local originY = (y + height - self.margin - fontHeight) 
     for i,v in ipairs(lines) do
         lg.print(v, x + self.margin, originY - fontHeight * ((#lines - i)))
-        
+    end
+    
+    lg.setColor(theme.tip)
+    lg.setFont(theme.font.tiny)
+    local fontHeight = lg.getFont():getAscent() - lg.getFont():getDescent()
+    local textWidth, lines = lg.getFont():getWrap(self.tip, width - (self.margin))
+    local originY = (y + height - fontHeight) 
+    for i,v in ipairs(lines) do
+        lg.print(v, x + self.margin, originY - fontHeight * ((#lines - i)))
     end
 
-    lg.setColor(0.8, 0.8, 0.8, 1)
-    lg.setFont(self.tipFont)
-    lg.print(self.tip, x + self.margin, y + height)
+    lg.setColor(theme.tip)
+    lg.printf(os.date("%x"), 0, y + 6, lg.getWidth(), "center")
 end
 
 return display

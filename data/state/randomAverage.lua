@@ -1,6 +1,6 @@
 local randomAverageState = {}
 
-local function randomAverage(total, items, difference)
+local function rndAvg(total, items, difference)
     local list = {}
     local average = total / items
 
@@ -45,24 +45,63 @@ local function randomAverage(total, items, difference)
     for i=1, items do
         finalSum = finalSum + list[i]
     end
-    print("T: "..total.." | S: "..finalSum)
     return list
 end
 
 function randomAverageState:load(data)
+    self.settingRange = false
+    self.range = 40
     self.mainLayout = {
         {"7", "8", "9"},
         {"4", "5", "6"},
         {"1", "2", "3"},
-        {"<", "0", ">"}
+        {"<", "0", "ok"},
+        {"cancel", "set range"}
     }
-    self.mainKeypad = keypad.new(self.mainLayout, 0, displayHeight, lg.getWidth(), lg.getHeight() - displayHeight)
-    self.mainKeypad:setRowSetting(4, "height", 0.5)
+    self.mainKeypad = keypad.new(self.mainLayout, 0, safe.y + displayHeight, lg.getWidth(), safe.height - displayHeight, self.keyPadInput)
+    self.mainKeypad:setRowSetting(5, "height", 0.5)
     self.mainKeypad:updateLayout()
     
-    self.mainKeypad:addKeyFunction("<", function() state:setState("calculator") end)
+    self.mainKeypad:addKeyFunction("cancel", function() state:setState("calculator") end)
+    self.mainKeypad:addKeyFunction("set range", function() 
+        display:setTip("Enter range")
+        self.settingRange = true
+    end)
+    self.mainKeypad:addKeyFunction("ok", self.ok) 
 
-    print(display:read())
+    self.total = display:read()
+    display:clear()
+    calculator:clear()
+    display:setTip("Enter items")
+end
+
+function randomAverageState.ok()
+    local self = randomAverageState
+    if calculator:hasFormula() then
+        if tonumber(display:read()) > 0 then
+            if self.settingRange then
+                self.range = display:read()
+                calculator:clear()
+                display:clear()
+                display:setTip("Range set to "..self.range..". Enter items.")
+                self.settingRange = false
+            else
+                randomAverageState.items = display:read()
+                local list = rndAvg(randomAverageState.total, randomAverageState.items, self.range)
+                state:setState("list", list)
+            end
+        else
+            display:setTip("Items cant be 0!")
+        end
+    end
+end
+
+function randomAverageState.keyPadInput(key)
+    calculator:input(key)
+end
+
+function randomAverageState:update(dt)
+    self.mainKeypad:update(dt)
 end
 
 function randomAverageState:draw()
