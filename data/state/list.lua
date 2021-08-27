@@ -1,4 +1,4 @@
-local list = {}
+local list = {name = "List"}
 
 function list:load(data)
     data = data or {"Empty"}
@@ -18,7 +18,8 @@ function list:load(data)
         text = "back"
     }
 
-    self.yOffset = 0
+    self.top = safe.y + (safe.height * 0.05)
+    self.yOffset = self.top
     self.real_y = 0
     self.startyOffset = 0
     self.startY = safe.y
@@ -29,6 +30,7 @@ function list:load(data)
     self.holdTime = 0.4
     self.holdTick = 0
     self.abortHold = false
+    displayHeight = normalDisplayHeight
 end
 
 function list:reverseList()
@@ -50,7 +52,7 @@ function list:update(dt)
     if self.inputWait == 0 then
         if love.mouse.isDown(1) then
             self.yOffset = self.startyOffset - (self.startY - love.mouse.getY())
-            if self.yOffset > safe.y then self.yOffset = safe.y end
+            if self.yOffset > self.top then self.yOffset = self.top end
             if self.yOffset < -self.listLength then self.yOffset = -self.listLength end
                 
             if math.abs(self.startY - love.mouse.getY()) < self.fontHeight and not self.abortHold then
@@ -91,25 +93,23 @@ function list:draw()
     for i,v in ipairs(self.list) do
         local y = safe.y + self.fontHeight * (i - 1)
 
-        lg.setColor(theme.fg)
-        if v == 420 then
-            lg.setColor(hsl(self.hue, 255, 126, 1))
-        end
+        lg.setColor(theme.display_text)
+
         setAlpha(self.alpha)
         lg.print(v, 12, y + ((self.fontHeight * 0.5) * (1 - self.alpha)) + self.real_y)
-        lg.setColor(theme.line)
+        lg.setColor(theme.keyboard_stroke)
         lg.line(0, y + self.fontHeight + self.real_y, lg.getWidth(), y + self.fontHeight + self.real_y)
         self.listLength = y
     end
 
     local y = safe.height - self.button.height + safe.y
-    lg.setColor(theme.bg)
+    lg.setColor(theme.keyboard_color)
     setAlpha(self.alpha)
     lg.rectangle("fill", 0, y, lg.getWidth(), self.button.height)
-    lg.setColor(theme.line)
+    lg.setColor(theme.keyboard_stroke)
     lg.rectangle("line", 0, y, lg.getWidth(), self.button.height)
     lg.setFont(theme.font.regular)
-    lg.setColor(theme.fg)
+    lg.setColor(theme.keyboard_text)
     setAlpha(self.alpha)
     lg.printf(self.button.text, 0, y + (self.button.height / 2) - (self.fontHeight / 2) + ((self.fontHeight * 0.5) * (1 - self.alpha)), lg.getWidth(), "center")
 end

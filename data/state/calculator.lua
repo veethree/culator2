@@ -1,4 +1,4 @@
-local calculatorState = {}
+local calculatorState = {name = "Calculator"}
 
 function calculatorState:loadKeypad()
     self.mainLayout = {
@@ -47,29 +47,36 @@ end
 function calculatorState:load(data)
     data = data or ""
 
-
+    displayHeight = normalDisplayHeight
     self.presses = 0
     self.lastKey = ""
     self:loadKeypad()
     calculator:setFormula(data)
     self.clearHistory = false
     self.selectTheme = false
+    self.toggle_vibration = false
+    self.total_formula = ""
 end
 
 function calculatorState.keyPadInput(key)
     self = calculatorState
+
     if key == "c" then
         calculator:input(key)
         display:clear()
         display:clearTip()
         self.selectTheme = false
         self.clearHistory = false
+        self.toggle_vibration = false
+        self.total_formula = ""
     end
 
     if key ~= "CH" then
         calculatorState.clearHistory = false
     end
+
     
+
     if self.selectTheme then
         if key == "=" then
             local id = tonumber(display:read()) or 0
@@ -90,6 +97,7 @@ function calculatorState.keyPadInput(key)
         calculator:input(key)
     end
     
+    -- Select theme trigger
     if key == "=" and self.lastKey == "=" then
         if not calculator:hasFormula() then
             display:setTip("Select theme, Press '=' to confirm")
@@ -97,6 +105,7 @@ function calculatorState.keyPadInput(key)
         end
     end
 
+    -- debug toggle trigger
     if key == "*" and self.lastKey == "*" then
         if not calculator:hasFormula() then
             debug_mode = not debug_mode
@@ -113,6 +122,23 @@ function calculatorState.keyPadInput(key)
         end
     end
 
+    -- Vibration toggle trigger
+    if key == "-" and self.lastKey == "-" then
+        if not calculator:hasFormula() then
+            state:setState("settings")
+        end
+    end
+
+    if key == "/" and self.lastKey == "/" then
+        if not calculator:hasFormula() then
+            state:setState("note")
+        end
+    end
+
+    if self.toggle_vibration then
+        display:setTip("Tap '-' again to toggle vibration, Or type in a value for vibration duration.")
+    end
+
     self.lastKey = key
 end
 
@@ -122,6 +148,7 @@ end
 
 function calculatorState:draw()
     self.mainKeypad:draw()
+
 
     --lg.setColor(0, 1, 1, 1)
     --lg.print(tostring(self.selectTheme), 12, 12)

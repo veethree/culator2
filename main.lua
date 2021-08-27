@@ -3,20 +3,28 @@ VERSION = 1.4
 
 lg = love.graphics
 fs = love.filesystem
+lk = love.keyboard
+
+mobile = false
+if love.system.getOS() == "Android" then
+    mobile = true
+end
 
 
 function love.load()
-
+    --love.system.openURL("file://"..fs.getSaveDirectory())
 
     math.randomseed(os.time() + love.mouse.getX() * 1000)
     -- Love setup
     lg.setLineStyle("rough")
     lg.setDefaultFilter("nearest", "nearest")
+    love.window.setTitle(NAME.." | "..VERSION)
     local sx, sy, sw, sh = love.window.getSafeArea()
     safe = {
         x = sx, y = sy, width = sw, height = sh
     }
     debug_mode = false
+
 
     --safe.y = 32
     --safe.height = safe.height - 64
@@ -25,13 +33,26 @@ function love.load()
     requireFolder("data/class")
     
     default_config = {
-        theme = 1
+        theme = 1,
+        vibration = true,
+        vibration_strength = 0.01,
+        display_height = 0.3,
+        use_top_margin = true,
+        notes = {}
     }
 
     config = readConfig()
     if not config then
         config = default_config
     end
+
+    --Filling in defaults if they're missing
+    config.theme = config.theme or 1
+    config.vibration = config.vibration or true
+    config.vibration_strength = config.vibration_strength or 0.01
+    config.display_height = config.display_height or 0.3
+    config.notes = config.notes or {}
+    config.use_top_margin = config.use_top_margin or true
 
     fontFace = "data/font/RobotoCondensed-Light.ttf"
     fontFaceTiny = "data/font/Minecraft.ttf"
@@ -42,7 +63,8 @@ function love.load()
     readHistory()
     setTheme(config.theme)
     
-    displayHeight = math.floor(lg.getHeight() * 0.3)
+    normalDisplayHeight = math.floor(lg.getHeight() * config.display_height)
+    displayHeight = normalDisplayHeight
 
     weed:load()
     state:loadStates("data/state")
@@ -99,9 +121,14 @@ function saveConfig()
     fs.write("config.lua", s)
 end
 
+function clearConfig()
+    fs.remove("config.lua")
+    love.load()
+end
+
 function setTheme(id)
     theme = themes[tonumber(id)]
-    lg.setBackgroundColor(theme.bg)
+    lg.setBackgroundColor(theme.display_bar)
     config.theme = id
     saveConfig()
 end
@@ -143,9 +170,13 @@ end
 function love.draw()
     lg.setCanvas(canvas)
     lg.clear()
-    lg.setColor(theme.bg)
+    --Background
+    lg.setColor(theme.display_color)
     lg.rectangle("fill", 0, 0, lg.getWidth(), lg.getHeight())
+
     state:draw()
+    lg.setColor(theme.display_bar)
+    lg.rectangle("fill", safe.x, safe.y, safe.width, safe.height * 0.05)
     display:draw(0, safe.y, lg.getWidth(), displayHeight)
     weed:draw()
 
@@ -178,6 +209,14 @@ function love.draw()
         lg.print("SAFE AREA: "..safe.x..", "..safe.y..", "..safe.width..", "..safe.height, 12, safe.y)
         lg.rectangle("line", safe.x + 1, safe.y, safe.width - 1, safe.height)
     end
+end
+
+function love.resize(w, h)
+    love.load()
+end
+
+function love.textinput(t)
+    state:textinput(t)
 end
 
 function love.mousepressed(x, y, k)

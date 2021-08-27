@@ -88,12 +88,17 @@ function tableToFile(tab, recursion)
     local i = 0
     for key, value in pairs(tab) do
         i = i + 1
+
+        if not tonumber(key) then
+        	str = str..key.." = "
+        end
+
         if type(value) == "string" then
-            str = str..key..' = "'..value..'"'
+            str = str..'"'..value..'"'
         elseif type(value) == "table" then
-            str = str..key.." = "..tableToFile(value, true)
+            str = str..tableToFile(value, true)
         else
-            str = str..key.." = "..tostring(value)
+            str = str..tostring(value)
         end
         
         if i < tableLength(tab) then
@@ -197,5 +202,5 @@ function hsl(h, s, l, a)
 	elseif h < 4 then r,g,b = 0,x,c
 	elseif h < 5 then r,g,b = x,0,c
 	else              r,g,b = c,0,x
-	end return (r+m),(g+m),(b+m),a
+	end return {(r+m),(g+m),(b+m),a}
 end

@@ -1,4 +1,4 @@
-local randomAverageState = {}
+local randomAverageState = {name = "Random Average"}
 
 local function rndAvg(total, items, difference)
     local list = {}
@@ -32,7 +32,7 @@ local function rndAvg(total, items, difference)
     for i=1, items do
         list[i] = math.floor(list[i])
         sum = sum + list[i]
-        print(list[i])
+        --print(list[i])
     end
 
     -- If there's a remainder, Add it to a random item.

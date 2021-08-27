@@ -74,7 +74,7 @@ function keypad:addKeyFunction(key, func)
 end
 
 function keypad:update(dt)
-    self.alpha = self.alpha + (self.targetAlpha - self.alpha) * 10 * dt
+    self.alpha = self.alpha + (self.targetAlpha - self.alpha) * theme.smoof * dt
 end
 
 -- Calculates the bounding box for a key
@@ -135,18 +135,19 @@ function keypad:draw()
             local y = settings.bounds[key].y - self.yOffset
             local keyWidth = settings.bounds[key].width
             local keyHeight = settings.bounds[key].height
-            lg.setColor(theme.kbg)
+            lg.setColor(theme.keyboard_color)
             if self.specialKeys[key] then
                 lg.setColor(theme.special)
             end
             setAlpha(self.alpha)
             lg.rectangle("fill", x, y, keyWidth, keyHeight, theme.corner, theme.corner)
 
-            lg.setColor(theme.line)
+            lg.setColor(theme.keyboard_stroke)
+            lg.setLineWidth(theme.keyboard_stroke_width)
             setAlpha(self.alpha)
             lg.rectangle("line", x, y, keyWidth, keyHeight, theme.corner, theme.corner)
 
-            lg.setColor(self.theme.foreground)
+            lg.setColor(theme.keyboard_text)
             if self.specialKeys[key] then
                 lg.setColor(theme.special_alt)
             end
@@ -154,7 +155,6 @@ function keypad:draw()
             local k = key
             local r = 0
             if weed.running then
-                --k = "420"
                 lg.setColor(love.math.noise(time), love.math.noise(time + 10), love.math.noise(time + 20))
             end
             renderLabel(k, x, y + ((keyHeight * 0.5) * (1 - self.alpha)), keyWidth, keyHeight)            
@@ -163,6 +163,25 @@ function keypad:draw()
             rowHeight = keyHeight
         end
         rowY = rowY + rowHeight
+    end
+end
+
+--Called when a key is held down, 
+function keypad:hold(inputX, inputY)
+    inputY = inputY + self.yOffset
+    for y=1, #self.layout do
+        local settings = self.layout[y].settings
+        local rowHeight = 0
+        for x,key in ipairs(self.layout[y].keys) do
+            local keyX, keyY, keyWidth, keyHeight = self:getKeyBounds(x, y, settings.height)
+            if pointInRect(inputX, inputY, keyX, keyY, keyWidth, keyHeight) then
+                if self.keyFunctions[self.layout[y].keys[x]] then
+                    local normal_x = fmath.normal(inputX, keyX, keyWidth)
+                    local normal_y = fmath.normal(inputY, keyY, keyHeight)
+                    self.keyFunctions[self.layout[y].keys[x]](normal_x, normal_y)
+                end
+            end
+        end
     end
 end
 
@@ -176,7 +195,9 @@ function keypad:input(inputX, inputY)
         for x,key in ipairs(self.layout[y].keys) do
             local keyX, keyY, keyWidth, keyHeight = self:getKeyBounds(x, y, settings.height)
             if pointInRect(inputX, inputY, keyX, keyY, keyWidth, keyHeight) then
-                love.system.vibrate(0.01)
+                if config.vibration then
+                    love.system.vibrate(config.vibration_strength)
+                end
                 if type(self.inputFunction) == "function" then
                     self.inputFunction(self.layout[y].keys[x])
                 end
