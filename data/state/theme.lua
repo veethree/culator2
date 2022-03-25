@@ -5,14 +5,19 @@ function settings:loadKeypad()
     self.set_display = false
 
     self.mainLayout = {}
+    local c = 0
     for i,v in ipairs(themes) do
         self.mainLayout[i] = {v.name}
+        c = c + 1
     end
     self.mainLayout[#self.mainLayout + 1] = {"Back"}
 
     self.mainKeypad = keypad.new(self.mainLayout, safe.x, safe.y + displayHeight, safe.width, safe.height - displayHeight, self.keyPadInput)
     self.mainKeypad:setSpecial("Back")
     self.mainKeypad:setRowSetting(#self.mainLayout, "height", 2)
+    for i=1, c do
+        self.mainKeypad:setRowSetting(i, "font", self.mainKeypad.theme.tinyFont)
+    end
     self.mainKeypad:updateLayout()
 
     self.mainKeypad:addKeyFunction("Back", function()

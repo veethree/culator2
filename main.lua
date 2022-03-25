@@ -1,5 +1,5 @@
 NAME = "Culator 2"
-VERSION = 1.4
+VERSION = 1.6
 
 lg = love.graphics
 fs = love.filesystem
@@ -26,9 +26,10 @@ function love.load()
     debug_mode = false
 
 
-    --safe.y = 32
-    --safe.height = safe.height - 64
+    -- safe.y = 32
+    -- safe.height = safe.height - 32
 
+    http = require("socket.http")
     require("data.class.util")
     requireFolder("data/class")
     
@@ -176,7 +177,7 @@ function love.draw()
 
     state:draw()
     lg.setColor(theme.display_bar)
-    lg.rectangle("fill", safe.x, safe.y, safe.width, safe.height * 0.05)
+    lg.rectangle("fill", safe.x, 0, safe.width, safe.height * 0.05 + safe.y)
     display:draw(0, safe.y, lg.getWidth(), displayHeight)
     weed:draw()
 
@@ -231,6 +232,7 @@ function love.mousereleased(x, y, k)
 end
 
 function love.keypressed(key)
+    state:keypressed(key)
     if key == "escape" then
         love.event.push("quit")
     elseif key == "c" then

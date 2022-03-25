@@ -208,39 +208,11 @@ function keypad:input(inputX, inputY)
             end
         end
     end
+end
 
-    --Easter egg triggers
-    --420
-    if display:read() == "420" then
-        weed:start()
-    else
-        weed:stop()
-    end
+-- Returns the first key with the corresponding text
+function keypad:getKeyByText(text)
 
-    --81
-    local quotes = {
-        "SUPPORT YOUR LOCAL 81",
-        "SYL81",
-        "BIG RED MACHINE",
-        "HAMC",
-        "RED & WHITE",
-        "HELLS ANGELS",
-        "SUPPORT 81"
-    }
-    local last_theme = config.theme
-    if display:read() == "81" then
-        display:setTip(quotes[math.random(#quotes)])
-    end
-
-    --80085
-    if display:read() == "80085" then
-        display:setTip("(  *  Y  *  )")
-    end
-
-    --69
-    if display:read() == "69" then
-        display:setTip("lol")
-    end
 end
 
 return keypad

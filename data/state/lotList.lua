@@ -8,7 +8,7 @@ function settings:loadKeypad()
         {"Toggle top margin", "Select theme"},
         {"Toggle vibration", "Set vibration strength"},
         {"Open data folder", "Toggle debug mode"},
-        {"Back", "Display height", "Clear config"}
+        {"Back", "Set display height", "Clear config"}
     }
 
     self.mainKeypad = keypad.new(self.mainLayout, safe.x, safe.y + displayHeight, safe.width, safe.height - displayHeight, self.keyPadInput)
@@ -29,6 +29,18 @@ function settings:loadKeypad()
         else
             local x, y = love.window:getSafeArea()
             safe.y = y
+        end
+    end)
+
+    self.mainKeypad:addKeyFunction("Random theme", function()
+        local p = math.random(1000)
+        for k,v in pairs(theme) do
+            if type(v) == "table" then
+                if tonumber(v[1]) then
+                    theme[k] = hsl(math.random(255), math.random(255), math.random(255), 255)
+                end
+            end
+            p = p + math.random()
         end
     end)
 
@@ -56,6 +68,10 @@ function settings:loadKeypad()
         love.system.openURL("file://"..fs.getSaveDirectory())
     end)
 
+    self.mainKeypad:addKeyFunction("Custom theme", function()
+        state:setState("custom_theme")
+    end)
+
     self.mainKeypad:addKeyFunction("Clear history", function()
         clearHistory()
         display:setTip("History cleared")
@@ -73,7 +89,7 @@ function settings:loadKeypad()
         state:setState("calculator")
     end)
 
-    self.mainKeypad:addKeyFunction("Display height", function()
+    self.mainKeypad:addKeyFunction("Set display height", function()
         state:getState().keypad = state:getState().numberKeypad
         display:setTip("Set display height (0-1)")
         self.set_display = true

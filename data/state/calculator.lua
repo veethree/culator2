@@ -75,8 +75,6 @@ function calculatorState.keyPadInput(key)
         calculatorState.clearHistory = false
     end
 
-    
-
     if self.selectTheme then
         if key == "=" then
             local id = tonumber(display:read()) or 0
@@ -122,21 +120,45 @@ function calculatorState.keyPadInput(key)
         end
     end
 
-    -- Vibration toggle trigger
+    -- Settings toggle trigger
     if key == "-" and self.lastKey == "-" then
         if not calculator:hasFormula() then
             state:setState("settings")
         end
     end
 
-    if key == "/" and self.lastKey == "/" then
-        if not calculator:hasFormula() then
-            state:setState("note")
-        end
+    if key == "." and self.lastKey == "." then
+        state:setState("icemaker")
     end
 
-    if self.toggle_vibration then
-        display:setTip("Tap '-' again to toggle vibration, Or type in a value for vibration duration.")
+    --Easter egg triggers
+    --420
+    if display:read() == "420" then
+        weed:start()
+    else
+        weed:stop()
+    end
+
+    --81
+    local quotes = {
+        "SUPPORT YOUR LOCAL 81",
+        "SYL81",
+        "BIG RED MACHINE",
+        "RED & WHITE",
+        "SUPPORT 81"
+    }
+    if display:read() == "81" then
+        display:setTip(quotes[math.random(#quotes)])
+    end
+
+    --80085
+    if display:read() == "80085" then
+        display:setTip("(  *  Y  *  )")
+    end
+
+    --69
+    if display:read() == "69" then
+        display:setTip("lol")
     end
 
     self.lastKey = key
@@ -148,10 +170,6 @@ end
 
 function calculatorState:draw()
     self.mainKeypad:draw()
-
-
-    --lg.setColor(0, 1, 1, 1)
-    --lg.print(tostring(self.selectTheme), 12, 12)
 end
 
 function calculatorState:mousepressed(x, y, k)
@@ -159,6 +177,24 @@ function calculatorState:mousepressed(x, y, k)
 end
 
 function calculatorState:keypressed(key)
+    print(key)
+    for _, col in ipairs(self.mainLayout) do
+        for _, row in ipairs(col) do
+            local key = key:gsub("kp", "")
+            if key == "backspace" then
+                key = "<"
+            elseif key == "enter" or key == "return" then
+                key = "="
+            elseif key == "home" then
+                key = "random average"
+            end
+            if key == row then
+                print(key)
+                self.keyPadInput(key)
+            end
+        end
+    end
+    
     if key == "escape" then
         love.event.push("quit")
     end
